@@ -1,0 +1,436 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local localPlayer = Players.LocalPlayer
+local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+
+-- update character when respawn
+localPlayer.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+end)
+ 
+-- GUI Setup
+local gui = Instance.new("ScreenGui", localPlayer:WaitForChild("PlayerGui"))
+gui.Name = "LoopTP"
+gui.ResetOnSpawn = false
+print("GUI created successfully!")
+ 
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 300, 0, 520)
+mainFrame.Position = UDim2.new(0.5, -150, 0.5, -260)
+mainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = gui
+ 
+local dragToggle = false
+local dragInput, dragStart, startPos
+local UserInputService = game:GetService("UserInputService")
+ 
+-- Touch Drag
+mainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragToggle = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+    end
+end)
+ 
+mainFrame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragToggle = false
+    end
+end)
+ 
+mainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+ 
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragToggle then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+                                       startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+ 
+-- Title
+local title = Instance.new("TextLabel", mainFrame)
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Text = "Teleport by coordinates"
+title.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+title.TextColor3 = Color3.new(1,1,1)
+title.TextSize = 20
+title.Font = Enum.Font.SourceSansBold
+ 
+-- Coordinates Input
+local xLabel = Instance.new("TextLabel", mainFrame)
+xLabel.Text = "X coordinate:"
+xLabel.TextColor3 = Color3.new(1,1,1)
+xLabel.Size = UDim2.new(1, -20, 0, 20)
+xLabel.Position = UDim2.new(0, 10, 0, 50)
+xLabel.BackgroundTransparency = 1
+
+local xBox = Instance.new("TextBox", mainFrame)
+xBox.PlaceholderText = "0"
+xBox.Text = "0"
+xBox.Position = UDim2.new(0, 10, 0, 70)
+xBox.Size = UDim2.new(1, -20, 0, 25)
+xBox.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+xBox.TextColor3 = Color3.new(1,1,1)
+
+local yLabel = Instance.new("TextLabel", mainFrame)
+yLabel.Text = "Y coordinate:"
+yLabel.TextColor3 = Color3.new(1,1,1)
+yLabel.Size = UDim2.new(1, -20, 0, 20)
+yLabel.Position = UDim2.new(0, 10, 0, 100)
+yLabel.BackgroundTransparency = 1
+
+local yBox = Instance.new("TextBox", mainFrame)
+yBox.PlaceholderText = "0"
+yBox.Text = "0"
+yBox.Position = UDim2.new(0, 10, 0, 120)
+yBox.Size = UDim2.new(1, -20, 0, 25)
+yBox.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+yBox.TextColor3 = Color3.new(1,1,1)
+
+local zLabel = Instance.new("TextLabel", mainFrame)
+zLabel.Text = "Z coordinate:"
+zLabel.TextColor3 = Color3.new(1,1,1)
+zLabel.Size = UDim2.new(1, -20, 0, 20)
+zLabel.Position = UDim2.new(0, 10, 0, 150)
+zLabel.BackgroundTransparency = 1
+
+local zBox = Instance.new("TextBox", mainFrame)
+zBox.PlaceholderText = "0"
+zBox.Text = "0"
+zBox.Position = UDim2.new(0, 10, 0, 170)
+zBox.Size = UDim2.new(1, -20, 0, 25)
+zBox.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+zBox.TextColor3 = Color3.new(1,1,1)
+ 
+-- Teleport Interval Input
+local intervalLabel = Instance.new("TextLabel", mainFrame)
+intervalLabel.Text = "Teleport Interval (sec):"
+intervalLabel.TextColor3 = Color3.new(1,1,1)
+intervalLabel.Size = UDim2.new(1, -20, 0, 20)
+intervalLabel.Position = UDim2.new(0, 10, 0, 200)
+intervalLabel.BackgroundTransparency = 1
+
+local intervalBox = Instance.new("TextBox", mainFrame)
+intervalBox.PlaceholderText = "1"
+intervalBox.Text = "1"
+intervalBox.Position = UDim2.new(0, 10, 0, 220)
+intervalBox.Size = UDim2.new(1, -20, 0, 30)
+intervalBox.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+intervalBox.TextColor3 = Color3.new(1,1,1)
+
+-- Jump Interval Input
+local jumpIntervalLabel = Instance.new("TextLabel", mainFrame)
+jumpIntervalLabel.Text = "Jump Interval (sec):"
+jumpIntervalLabel.TextColor3 = Color3.new(1,1,1)
+jumpIntervalLabel.Size = UDim2.new(1, -20, 0, 20)
+jumpIntervalLabel.Position = UDim2.new(0, 10, 0, 260)
+jumpIntervalLabel.BackgroundTransparency = 1
+
+local jumpIntervalBox = Instance.new("TextBox", mainFrame)
+jumpIntervalBox.PlaceholderText = "0.5"
+jumpIntervalBox.Text = "0.5"
+jumpIntervalBox.Position = UDim2.new(0, 10, 0, 280)
+jumpIntervalBox.Size = UDim2.new(1, -20, 0, 30)
+jumpIntervalBox.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+jumpIntervalBox.TextColor3 = Color3.new(1,1,1)
+ 
+-- Script control flags
+local scriptRunning = true
+local isActive = false
+local isJumpActive = false
+
+-- Teleport Toggle
+local toggleBtn = Instance.new("TextButton", mainFrame)
+toggleBtn.Position = UDim2.new(0, 10, 0, 320)
+toggleBtn.Size = UDim2.new(1, -20, 0, 30)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+toggleBtn.TextColor3 = Color3.new(1,1,1)
+toggleBtn.Text = "🔴 Teleport Not active"
+toggleBtn.MouseButton1Click:Connect(function()
+    isActive = not isActive
+    toggleBtn.Text = isActive and "🟢 Teleport Active" or "🔴 Teleport Not active"
+    toggleBtn.BackgroundColor3 = isActive and Color3.fromRGB(115, 102, 189) or Color3.fromRGB(170, 0, 0)
+    print("Teleport loop:", isActive and "ACTIVATED" or "DEACTIVATED")
+end)
+
+-- Jump Toggle
+local jumpToggleBtn = Instance.new("TextButton", mainFrame)
+jumpToggleBtn.Position = UDim2.new(0, 10, 0, 360)
+jumpToggleBtn.Size = UDim2.new(1, -20, 0, 30)
+jumpToggleBtn.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+jumpToggleBtn.TextColor3 = Color3.new(1,1,1)
+jumpToggleBtn.Text = "🔴 Jump Not active"
+jumpToggleBtn.MouseButton1Click:Connect(function()
+    isJumpActive = not isJumpActive
+    jumpToggleBtn.Text = isJumpActive and "🟢 Jump Active" or "🔴 Jump Not active"
+    jumpToggleBtn.BackgroundColor3 = isJumpActive and Color3.fromRGB(132, 152, 217) or Color3.fromRGB(170, 0, 0)
+    print("Jump loop:", isJumpActive and "ACTIVATED" or "DEACTIVATED")
+end)
+
+-- Copy Player Coordinates Button
+local copyCoordsBtn = Instance.new("TextButton", mainFrame)
+copyCoordsBtn.Position = UDim2.new(0, 10, 0, 400)
+copyCoordsBtn.Size = UDim2.new(1, -20, 0, 30)
+copyCoordsBtn.BackgroundColor3 = Color3.fromRGB(255, 165, 0)
+copyCoordsBtn.TextColor3 = Color3.new(255,255,255)
+copyCoordsBtn.Text = "Copy My Coordinates"
+copyCoordsBtn.Font = Enum.Font.SourceSans
+copyCoordsBtn.TextSize = 15
+copyCoordsBtn.MouseButton1Click:Connect(function()
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        local pos = character.HumanoidRootPart.Position
+        local coords = string.format("%.1f, %.1f, %.1f", pos.X, pos.Y, pos.Z)
+        
+        -- Update coordinate boxes
+        xBox.Text = tostring(math.floor(pos.X))
+        yBox.Text = tostring(math.floor(pos.Y))
+        zBox.Text = tostring(math.floor(pos.Z))
+        
+        copyToClipboard(coords)
+        showCopyableLink("Your Coordinates:", coords)
+        print("Player coordinates:", coords)
+    else
+        print("Character not found!")
+    end
+end)
+ 
+-- Menu Toggle (Floating)
+local menuBtn = Instance.new("TextButton", gui)
+menuBtn.Position = UDim2.new(0, 10, 0, 10)
+menuBtn.Size = UDim2.new(0, 80, 0, 35)
+menuBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
+menuBtn.TextColor3 = Color3.new(1,1,1)
+menuBtn.Text = "Menu"
+menuBtn.Font = Enum.Font.SourceSansBold
+menuBtn.TextSize = 16
+menuBtn.BorderSizePixel = 0
+
+-- Add corner rounding
+local menuCorner = Instance.new("UICorner", menuBtn)
+menuCorner.CornerRadius = UDim.new(0, 8)
+
+-- Menu button drag functionality
+local menuDragToggle = false
+local menuDragInput, menuDragStart, menuStartPos
+
+menuBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        menuDragToggle = true
+        menuDragStart = input.Position
+        menuStartPos = menuBtn.Position
+        -- Visual feedback when dragging starts
+        menuBtn.BackgroundColor3 = Color3.fromRGB(30, 120, 200)
+    end
+end)
+
+menuBtn.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        menuDragToggle = false
+        -- Reset color when dragging ends
+        menuBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
+    end
+end)
+
+menuBtn.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement then
+        menuDragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == menuDragInput and menuDragToggle then
+        local delta = input.Position - menuDragStart
+        local newX = menuStartPos.X.Offset + delta.X
+        local newY = menuStartPos.Y.Offset + delta.Y
+        
+        -- Keep button within screen bounds
+        local screenSize = gui.AbsoluteSize
+        newX = math.max(0, math.min(newX, screenSize.X - menuBtn.AbsoluteSize.X))
+        newY = math.max(0, math.min(newY, screenSize.Y - menuBtn.AbsoluteSize.Y))
+        
+        menuBtn.Position = UDim2.new(0, newX, 0, newY)
+    end
+end)
+
+menuBtn.MouseButton1Click:Connect(function()
+    mainFrame.Visible = not mainFrame.Visible
+    print("Menu toggled:", mainFrame.Visible and "OPENED" or "CLOSED")
+end)
+ 
+-- Destroy GUI
+local destroyBtn = Instance.new("TextButton", mainFrame)
+destroyBtn.Position = UDim2.new(0, 10, 0, 440)
+destroyBtn.Size = UDim2.new(1, -20, 0, 30)
+destroyBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+destroyBtn.TextColor3 = Color3.new(1,1,1)
+destroyBtn.Text = "Delete script"
+destroyBtn.MouseButton1Click:Connect(function()
+    scriptRunning = false  -- Stop all loops
+    isActive = false       -- Stop teleport
+    isJumpActive = false   -- Stop jump
+    print("Script stopped!")
+    gui:Destroy()
+    script:Destroy()
+end)
+
+-- Author Info (Clickable)
+local authorLabel = Instance.new("TextButton", mainFrame)
+authorLabel.Position = UDim2.new(0, 10, 0, 480)
+authorLabel.Size = UDim2.new(1, -20, 0, 35)
+authorLabel.BackgroundTransparency = 0.8
+authorLabel.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+authorLabel.Text = "Made by: onexale/whyalucy\nClick to copy Discord link"
+authorLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+authorLabel.TextSize = 12
+authorLabel.Font = Enum.Font.SourceSans
+authorLabel.TextXAlignment = Enum.TextXAlignment.Center
+authorLabel.TextYAlignment = Enum.TextYAlignment.Center
+authorLabel.BorderSizePixel = 0
+
+-- Add corner rounding for author button
+local authorCorner = Instance.new("UICorner", authorLabel)
+authorCorner.CornerRadius = UDim.new(0, 5)
+
+-- Copy to clipboard function
+local function copyToClipboard(text)
+    pcall(function()
+        local clipboard = game:GetService("ClipboardService")
+        clipboard:Set(text)
+        print("Copied to clipboard:", text)
+    end)
+end
+
+-- Show copyable link function
+local function showCopyableLink(message, link)
+    local notification = Instance.new("Frame", gui)
+    notification.Size = UDim2.new(0, 400, 0, 120)
+    notification.Position = UDim2.new(0.5, -200, 0, -120)
+    notification.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+    notification.BorderSizePixel = 0
+    
+    local notifCorner = Instance.new("UICorner", notification)
+    notifCorner.CornerRadius = UDim.new(0, 10)
+    
+    local notifText = Instance.new("TextLabel", notification)
+    notifText.Size = UDim2.new(1, 0, 0, 30)
+    notifText.Position = UDim2.new(0, 0, 0, 0)
+    notifText.BackgroundTransparency = 1
+    notifText.Text = message
+    notifText.TextColor3 = Color3.new(1, 1, 1)
+    notifText.TextSize = 16
+    notifText.Font = Enum.Font.SourceSansBold
+    notifText.TextXAlignment = Enum.TextXAlignment.Center
+    notifText.TextYAlignment = Enum.TextYAlignment.Center
+    
+    -- Copyable TextBox
+    local linkBox = Instance.new("TextBox", notification)
+    linkBox.Size = UDim2.new(1, -20, 0, 40)
+    linkBox.Position = UDim2.new(0, 10, 0, 40)
+    linkBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    linkBox.Text = link
+    linkBox.TextColor3 = Color3.new(0, 0, 0)
+    linkBox.TextSize = 12
+    linkBox.Font = Enum.Font.SourceSans
+    linkBox.TextXAlignment = Enum.TextXAlignment.Center
+    linkBox.TextYAlignment = Enum.TextYAlignment.Center
+    linkBox.BorderSizePixel = 0
+    linkBox.ClearTextOnFocus = false  -- This is the key setting!
+    linkBox.TextEditable = false      -- Prevent editing
+    
+    local linkCorner = Instance.new("UICorner", linkBox)
+    linkCorner.CornerRadius = UDim.new(0, 5)
+    
+    local instructionText = Instance.new("TextLabel", notification)
+    instructionText.Size = UDim2.new(1, 0, 0, 30)
+    instructionText.Position = UDim2.new(0, 0, 0, 90)
+    instructionText.BackgroundTransparency = 1
+    instructionText.Text = "Click on the link above to select and copy it"
+    instructionText.TextColor3 = Color3.fromRGB(200, 200, 200)
+    instructionText.TextSize = 12
+    instructionText.Font = Enum.Font.SourceSans
+    instructionText.TextXAlignment = Enum.TextXAlignment.Center
+    instructionText.TextYAlignment = Enum.TextYAlignment.Center
+    
+    -- Animate notification in
+    notification:TweenPosition(UDim2.new(0.5, -200, 0, 20), "Out", "Quad", 0.5)
+    
+    -- Remove notification after 8 seconds
+    task.spawn(function()
+        task.wait(8)
+        notification:TweenPosition(UDim2.new(0.5, -200, 0, -120), "Out", "Quad", 0.5)
+        task.wait(0.5)
+        notification:Destroy()
+    end)
+end
+
+-- Click handler for author info
+authorLabel.MouseButton1Click:Connect(function()
+    local discordLink = "http://discordapp.com/users/715915325421518958"
+    copyToClipboard(discordLink)
+    showCopyableLink("Discord Link:", discordLink)
+    print("Discord link:", discordLink)
+end)
+
+-- Hover effects
+authorLabel.MouseEnter:Connect(function()
+    authorLabel.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    authorLabel.TextColor3 = Color3.new(1, 1, 1)
+end)
+
+authorLabel.MouseLeave:Connect(function()
+    authorLabel.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    authorLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+end)
+ 
+-- Auto Teleport Loop
+task.spawn(function()
+    while scriptRunning do
+        if isActive and scriptRunning then
+            -- check character and HumanoidRootPart
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                local x = tonumber(xBox.Text) or 0
+                local y = tonumber(yBox.Text) or 0
+                local z = tonumber(zBox.Text) or 0
+                
+                -- teleport
+                pcall(function()
+                    character.HumanoidRootPart.CFrame = CFrame.new(x, y, z)
+                    print("Teleported to:", x, y, z)
+                end)
+            else
+                print("Character or HumanoidRootPart not found!")
+            end
+        end
+        local interval = tonumber(intervalBox.Text) or 1
+        task.wait(interval)
+    end
+    print("Teleport loop stopped!")
+end)
+
+-- Auto Jump Loop
+task.spawn(function()
+    while scriptRunning do
+        if isJumpActive and scriptRunning then
+            -- check character and Humanoid
+            if character and character:FindFirstChild("Humanoid") then
+                -- jump
+                pcall(function()
+                    character.Humanoid.Jump = true
+                    print("Jumped!")
+                end)
+            else
+                print("Character or Humanoid not found!")
+            end
+        end
+        local jumpInterval = tonumber(jumpIntervalBox.Text) or 0.5
+        task.wait(jumpInterval)
+    end
+    print("Jump loop stopped!")
+end)

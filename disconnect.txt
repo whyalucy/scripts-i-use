@@ -1,0 +1,525 @@
+task.defer(function() -- это запустится параллельно, работу основного скрипта затронуть не должно
+  repeat task.wait() until game:IsLoaded()
+  task.wait(1)
+  
+  local Players = game:GetService('Players')
+  local CoreGui = game:GetService('CoreGui')
+  local TweenService = game:GetService('TweenService')
+
+  local ui = Instance.new('ScreenGui')
+  ui.ResetOnSpawn = false
+  ui.Name = tostring(math.random(1000000, 9999999))..tostring(math.random(1000000, 9999999))
+  ui.DisplayOrder = 100
+
+  local image = Instance.new('ImageLabel')
+  image.BackgroundTransparency = 1
+  image.AnchorPoint = Vector2.new(0, 1)
+  image.Position = UDim2.new(0, -200, 0.9, 0)
+  image.Size = UDim2.fromOffset(200, 150)
+  image.BorderSizePixel = 0
+
+  if getcustomasset and writefile then
+    writefile('kurtisimg.png', game:HttpGet('https://github.com/anowerrrr333-star/imgforscript/blob/main/Frame%201.png?raw=true'))
+    image.Image = getcustomasset('kurtisimg.png')
+  end
+
+  image.Parent = ui
+  ui.Parent = gethui and gethui() or CoreGui or Players.LocalPlayer:WaitForChild('PlayerGui')
+
+  local initialPosition = image.Position
+  local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+
+  TweenService:Create(image, tweenInfo, {Position = UDim2.new(0.05, 0, 0.9, 0)}):Play()
+  
+  task.wait(0.5 + 7)
+  
+  TweenService:Create(image, tweenInfo, {Position = initialPosition}):Play()
+  
+  task.wait(0.5)
+  
+  ui:Destroy()
+end)
+
+task.defer(function() -- это запустится параллельно, работу основного скрипта затронуть не должно
+  repeat task.wait() until game:IsLoaded()
+  task.wait(1)
+  
+  local Players = game:GetService('Players')
+  local CoreGui = game:GetService('CoreGui')
+  local TweenService = game:GetService('TweenService')
+
+  local ui = Instance.new('ScreenGui')
+  ui.ResetOnSpawn = false
+  ui.Name = tostring(math.random(1000000, 9999999))..tostring(math.random(1000000, 9999999))
+  ui.DisplayOrder = 100
+
+  local image = Instance.new('ImageLabel')
+  image.BackgroundTransparency = 1
+  image.AnchorPoint = Vector2.new(0, 1)
+  image.Position = UDim2.new(0, -200, 0.9, 0)
+  image.Size = UDim2.fromOffset(200, 150)
+  image.BorderSizePixel = 0
+
+  if getcustomasset and writefile then
+    writefile('kurtisimg.png', game:HttpGet('https://github.com/anowerrrr333-star/imgforscript/blob/main/Frame%201.png?raw=true'))
+    image.Image = getcustomasset('kurtisimg.png')
+  end
+
+  image.Parent = ui
+  ui.Parent = gethui and gethui() or CoreGui or Players.LocalPlayer:WaitForChild('PlayerGui')
+
+  local initialPosition = image.Position
+  local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+
+  TweenService:Create(image, tweenInfo, {Position = UDim2.new(0.05, 0, 0.9, 0)}):Play()
+  
+  task.wait(0.5 + 7)
+  
+  TweenService:Create(image, tweenInfo, {Position = initialPosition}):Play()
+  
+  task.wait(0.5)
+  
+  ui:Destroy()
+end)
+
+-- // 1 (Services) //
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+-- // 2 (Player) //
+local lp = Players.LocalPlayer
+local playerGui = lp:WaitForChild("PlayerGui")
+
+-- // 3 (State) //
+local desyncEnabled = false
+local noAnimEnabled = false
+local collapsed = false
+
+-- // 3b (Platform detection) //
+local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+
+-- // 3c (Speed FFlags) //
+local function applySpeedFlags()
+	local flags = {
+		DFIntCharacterMaxSpeed = "9999",
+		DFIntMaxLinearVelocity = "9999",
+		DFIntTaskSchedulerTargetFps = "240",
+		DFIntPhysicsSenderRate = "240",
+		PhysicsSenderMaxBandwidthBps = "20000",
+		ServerMaxBandwith = "9999",
+		MaxDataPacketPerSend = "2147483647",
+		InterpolationFrameVelocityThresholdMillionth = "1",
+		InterpolationFramePositionThresholdMillionth = "1",
+	}
+	for key, value in pairs(flags) do
+		pcall(function() setfflag(key, value) end)
+	end
+end
+
+-- // 3d (PC raknet hook) //
+local hooked = false
+local function rakhook(packet)
+	if packet.PacketId == 0x1B then
+		local data = packet.AsBuffer
+		buffer.writeu32(data, 1, 0xFFFFFFFF)
+		packet:SetData(data)
+	end
+end
+
+local function enablePCDesync()
+	if not hooked then
+		pcall(function()
+			raknet.add_send_hook(rakhook)
+			hooked = true
+		end)
+	end
+end
+
+local function disablePCDesync()
+	if hooked then
+		pcall(function()
+			raknet.remove_send_hook(rakhook)
+			hooked = false
+		end)
+	end
+end
+
+-- // 3e (Mobile desync) //
+local function enableMobileDesync()
+	applySpeedFlags()
+	task.wait(0.4)
+	pcall(function() raknet.desync(true) end)
+end
+
+local function disableMobileDesync()
+	pcall(function() raknet.desync(false) end)
+end
+
+-- // 4 (Cleanup old) //
+if playerGui:FindFirstChild("kurtis") then playerGui.kurtis:Destroy() end
+if playerGui:FindFirstChild("kurtis") then playerGui.kurtis:Destroy() end
+
+-- // 5 (Watermark intro) //
+local wmGui = Instance.new("ScreenGui")
+wmGui.Name = "kurtis"
+wmGui.ResetOnSpawn = false
+wmGui.Parent = playerGui
+
+local wmFrame = Instance.new("Frame")
+wmFrame.Size = UDim2.new(0, 0, 0, 0)
+wmFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+wmFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+wmFrame.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
+wmFrame.BackgroundTransparency = 1
+wmFrame.BorderSizePixel = 0
+wmFrame.Parent = wmGui
+
+Instance.new("UICorner", wmFrame).CornerRadius = UDim.new(0, 16)
+
+local wmStroke = Instance.new("UIStroke")
+wmStroke.Color = Color3.new(1, 1, 1)
+wmStroke.Thickness = 2
+wmStroke.Transparency = 1
+wmStroke.Parent = wmFrame
+
+local wmTitle = Instance.new("TextLabel")
+wmTitle.Size = UDim2.new(1, 0, 0.5, 0)
+wmTitle.BackgroundTransparency = 1
+wmTitle.Text = "kurtis hub"
+wmTitle.TextColor3 = Color3.new(1, 1, 1)
+wmTitle.TextTransparency = 1
+wmTitle.TextSize = 22
+wmTitle.Font = Enum.Font.LuckiestGuy
+wmTitle.Parent = wmFrame
+
+local wmSub = Instance.new("TextLabel")
+wmSub.Size = UDim2.new(1, 0, 0.5, 0)
+wmSub.Position = UDim2.new(0, 0, 0.5, 0)
+wmSub.BackgroundTransparency = 1
+wmSub.Text = "No Tool Desync"
+wmSub.TextColor3 = Color3.fromRGB(200, 200, 200)
+wmSub.TextTransparency = 1
+wmSub.TextSize = 14
+wmSub.Font = Enum.Font.LuckiestGuy
+wmSub.Parent = wmFrame
+
+local wmDiv = Instance.new("Frame")
+wmDiv.Size = UDim2.new(0.6, 0, 0, 1)
+wmDiv.Position = UDim2.new(0.2, 0, 0.5, 0)
+wmDiv.BackgroundColor3 = Color3.new(1, 1, 1)
+wmDiv.BackgroundTransparency = 1
+wmDiv.BorderSizePixel = 0
+wmDiv.Parent = wmFrame
+
+-- // 6 (Watermark animation) //
+task.spawn(function()
+	TweenService:Create(wmFrame, TweenInfo.new(0.5), {Size = UDim2.new(0, 220, 0, 80), BackgroundTransparency = 0.1}):Play()
+	TweenService:Create(wmStroke, TweenInfo.new(0.5), {Transparency = 0}):Play()
+	task.wait(0.3)
+	TweenService:Create(wmTitle, TweenInfo.new(0.4), {TextTransparency = 0}):Play()
+	TweenService:Create(wmSub, TweenInfo.new(0.4), {TextTransparency = 0}):Play()
+	TweenService:Create(wmDiv, TweenInfo.new(0.4), {BackgroundTransparency = 0}):Play()
+	task.wait(2)
+	TweenService:Create(wmFrame, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
+	TweenService:Create(wmStroke, TweenInfo.new(0.5), {Transparency = 1}):Play()
+	TweenService:Create(wmTitle, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+	TweenService:Create(wmSub, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+	TweenService:Create(wmDiv, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+	task.wait(0.6)
+	wmGui:Destroy()
+end)
+
+-- // 7 (Main ScreenGui) //
+local gui = Instance.new("ScreenGui")
+gui.Name = "kurtis"
+gui.ResetOnSpawn = false
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.Parent = playerGui
+
+-- // 8 (Main frame) //
+local main = Instance.new("Frame")
+main.Name = "MainFrame"
+main.Size = UDim2.new(0, 160, 0, 132)
+main.Position = UDim2.new(0.5, 285, 0.4, -14)
+main.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+main.BackgroundTransparency = 0.3
+main.BorderSizePixel = 0
+main.Active = true
+main.Visible = false
+main.Parent = gui
+
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 10)
+
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Color = Color3.fromRGB(210, 210, 210)
+mainStroke.Thickness = 2
+mainStroke.Transparency = 0.29
+mainStroke.Parent = main
+
+-- // 9 (Stroke breathing animation) //
+task.spawn(function()
+	local t = 0
+	while main.Parent do
+		t = t + 0.05
+		mainStroke.Transparency = 0.287 + math.sin(t) * 0.003
+		RunService.RenderStepped:Wait()
+	end
+end)
+
+-- // 10 (Header) //
+local titleLbl = Instance.new("TextLabel")
+titleLbl.Size = UDim2.new(1, -30, 0, 22)
+titleLbl.Position = UDim2.new(0, 8, 0, 2)
+titleLbl.BackgroundTransparency = 1
+titleLbl.Text = "Kurtis Desync"
+titleLbl.TextColor3 = Color3.fromRGB(240, 240, 240)
+titleLbl.TextSize = 9.9
+titleLbl.Font = Enum.Font.LuckiestGuy
+titleLbl.TextXAlignment = Enum.TextXAlignment.Left
+titleLbl.Parent = main
+
+local collapseBtn = Instance.new("TextButton")
+collapseBtn.Size = UDim2.new(0, 19, 0, 19)
+collapseBtn.Position = UDim2.new(1, -23, 0, 2)
+collapseBtn.Text = "▼"
+collapseBtn.Font = Enum.Font.GothamBold
+collapseBtn.TextSize = 14
+collapseBtn.TextColor3 = Color3.fromRGB(240, 240, 240)
+collapseBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+collapseBtn.AutoButtonColor = false
+collapseBtn.Parent = main
+
+Instance.new("UICorner", collapseBtn).CornerRadius = UDim.new(0, 5)
+
+-- // 11 (Content frame with list layout) //
+local content = Instance.new("Frame")
+content.Name = "ContentFrame"
+content.Position = UDim2.new(0, 0, 0, 22)
+content.Size = UDim2.new(1, 0, 1, -22)
+content.BackgroundTransparency = 1
+content.BorderSizePixel = 0
+content.Parent = main
+
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0, 5)
+layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Parent = content
+
+local pad = Instance.new("UIPadding")
+pad.PaddingTop = UDim.new(0, 6)
+pad.PaddingBottom = UDim.new(0, 6)
+pad.Parent = content
+
+-- // 12 (Desync status row) //
+local statusRow = Instance.new("Frame")
+statusRow.Size = UDim2.new(1, -16, 0, 18)
+statusRow.LayoutOrder = 1
+statusRow.BackgroundTransparency = 1
+statusRow.BorderSizePixel = 0
+statusRow.Parent = content
+
+local desyncLabel = Instance.new("TextLabel")
+desyncLabel.Size = UDim2.new(0.35, 0, 1, 0)
+desyncLabel.Position = UDim2.new(0, 2, 0, 0)
+desyncLabel.BackgroundTransparency = 1
+desyncLabel.Text = "Desync:"
+desyncLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+desyncLabel.TextSize = 11
+desyncLabel.Font = Enum.Font.LuckiestGuy
+desyncLabel.TextXAlignment = Enum.TextXAlignment.Left
+desyncLabel.Parent = statusRow
+
+local statusValue = Instance.new("TextLabel")
+statusValue.Size = UDim2.new(0.65, -4, 0, 16)
+statusValue.Position = UDim2.new(0.35, 0, 0, 1)
+statusValue.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+statusValue.BackgroundTransparency = 0.15
+statusValue.Text = "OFF"
+statusValue.TextColor3 = Color3.fromRGB(200, 80, 80)
+statusValue.TextSize = 10
+statusValue.Font = Enum.Font.LuckiestGuy
+statusValue.Parent = statusRow
+
+Instance.new("UICorner", statusValue).CornerRadius = UDim.new(0, 4)
+
+-- // 13 (Toggle desync button) //
+local desyncBtnRow = Instance.new("Frame")
+desyncBtnRow.Size = UDim2.new(1, -16, 0, 26)
+desyncBtnRow.LayoutOrder = 2
+desyncBtnRow.BackgroundTransparency = 1
+desyncBtnRow.BorderSizePixel = 0
+desyncBtnRow.Parent = content
+
+local desyncBtn = Instance.new("TextButton")
+desyncBtn.Name = "DesyncBtn"
+desyncBtn.Size = UDim2.new(1, 0, 1, 0)
+desyncBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+desyncBtn.TextColor3 = Color3.new(1, 1, 1)
+desyncBtn.Font = Enum.Font.LuckiestGuy
+desyncBtn.TextSize = 10
+desyncBtn.Text = "TOGGLE DESYNC"
+desyncBtn.AutoButtonColor = false
+desyncBtn.Parent = desyncBtnRow
+
+Instance.new("UICorner", desyncBtn).CornerRadius = UDim.new(0, 6)
+
+-- // 14 (No Anim button) //
+local noAnimBtn = Instance.new("TextButton")
+noAnimBtn.Name = "NoAnimBtn"
+noAnimBtn.Size = UDim2.new(1, -16, 0, 26)
+noAnimBtn.LayoutOrder = 3
+noAnimBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+noAnimBtn.TextColor3 = Color3.new(1, 1, 1)
+noAnimBtn.Font = Enum.Font.LuckiestGuy
+noAnimBtn.TextSize = 10
+noAnimBtn.Text = "NO ANIM: OFF"
+noAnimBtn.AutoButtonColor = false
+noAnimBtn.Parent = content
+
+Instance.new("UICorner", noAnimBtn).CornerRadius = UDim.new(0, 6)
+
+local noAnimStroke = Instance.new("UIStroke")
+noAnimStroke.Thickness = 0.1
+noAnimStroke.Parent = noAnimBtn
+
+-- // 15 (Discord label) //
+local discLabel = Instance.new("TextLabel")
+discLabel.Size = UDim2.new(1, -16, 0, 13)
+discLabel.LayoutOrder = 4
+discLabel.BackgroundTransparency = 1
+discLabel.Text = "T.ME/KURTIS_SCRIPTS"
+discLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+discLabel.TextSize = 9
+discLabel.Font = Enum.Font.LuckiestGuy
+discLabel.TextXAlignment = Enum.TextXAlignment.Center
+discLabel.Parent = content
+
+-- // 16 (Auto-size from layout) //
+layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	local h = layout.AbsoluteContentSize.Y + pad.PaddingTop.Offset + pad.PaddingBottom.Offset
+	main.Size = UDim2.new(0, 160, 0, 22 + h)
+end)
+
+-- // 17 (Collapse) //
+collapseBtn.MouseButton1Click:Connect(function()
+	collapsed = not collapsed
+	content.Visible = not collapsed
+	collapseBtn.Text = collapsed and "◀" or "▼"
+	if collapsed then
+		main.Size = UDim2.new(0, 160, 0, 47)
+	end
+end)
+
+-- // 18 (Draggable via header) //
+do
+	local dg, ds, sp = false, nil, nil
+	local function startDrag(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dg = true; ds = input.Position; sp = main.Position
+		end
+	end
+	collapseBtn.InputBegan:Connect(startDrag)
+	titleLbl.InputBegan:Connect(startDrag)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if dg and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			local delta = input.Position - ds
+			main.Position = UDim2.new(sp.X.Scale, sp.X.Offset + delta.X, sp.Y.Scale, sp.Y.Offset + delta.Y)
+		end
+	end)
+
+	local function endDrag(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dg = false
+		end
+	end
+	collapseBtn.InputEnded:Connect(endDrag)
+	titleLbl.InputEnded:Connect(endDrag)
+end
+
+-- // 19 (Desync logic — raknet, platform-smart) //
+local function startDesync()
+	desyncEnabled = true
+	applySpeedFlags()
+	task.wait(0.3)
+	if isMobile then
+		enableMobileDesync()
+	else
+		enablePCDesync()
+	end
+end
+
+local function stopDesync()
+	desyncEnabled = false
+	if isMobile then
+		disableMobileDesync()
+	else
+		disablePCDesync()
+	end
+end
+
+desyncBtn.MouseButton1Click:Connect(function()
+	if desyncEnabled then
+		stopDesync()
+		desyncBtn.Text = "TOGGLE DESYNC"
+		statusValue.Text = "OFF"
+		statusValue.TextColor3 = Color3.fromRGB(200, 80, 80)
+		mainStroke.Color = Color3.fromRGB(210, 210, 210)
+	else
+		startDesync()
+		desyncBtn.Text = "DESYNC ACTIVE"
+		statusValue.Text = "ACTIVE"
+		statusValue.TextColor3 = Color3.fromRGB(80, 200, 80)
+		mainStroke.Color = Color3.fromRGB(145, 144, 144)
+	end
+end)
+
+-- // 20 (No Anim toggle) //
+local savedAnimate = nil
+
+noAnimBtn.MouseButton1Click:Connect(function()
+	noAnimEnabled = not noAnimEnabled
+	noAnimBtn.Text = noAnimEnabled and "NO ANIM: ON" or "NO ANIM: OFF"
+
+	pcall(function()
+		local char = lp.Character
+		if not char then return end
+		if noAnimEnabled then
+			local animate = char:FindFirstChild("Animate")
+			if animate then
+				savedAnimate = animate:Clone()
+				animate:Destroy()
+			end
+		else
+			if savedAnimate and lp.Character then
+				savedAnimate.Parent = lp.Character
+				savedAnimate = nil
+			end
+		end
+	end)
+end)
+
+-- // 21 (Re-apply on respawn) //
+lp.CharacterAdded:Connect(function(char)
+	task.wait(1)
+	if desyncEnabled then
+		stopDesync()
+		task.wait(0.5)
+		startDesync()
+	end
+	if noAnimEnabled then
+		local animate = char:FindFirstChild("Animate")
+		if animate then
+			savedAnimate = animate:Clone()
+			animate:Destroy()
+		end
+	end
+end)
+
+-- // 22 (Show main after watermark delay) //
+task.delay(3, function()
+	main.Visible = true
+end)
